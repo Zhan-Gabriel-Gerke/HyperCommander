@@ -4,7 +4,7 @@
 
 echo "File Janitor, 2025"
 echo "Powered by Bash"
-echo " "
+echo 
 if [[ $1 == help ]]; then
         cat file-janitor-help.txt
 elif [[ $1 == list ]]; then
@@ -52,9 +52,15 @@ elif [[ $1 == clean ]]; then
                         ((pyCount++))
                         mkdir -p "$path/python_scripts"
                         mv "$file" "$path/python_scripts"
-                elif [[ "$file" == *.log ]] && (( ( $(date +%s) - $(stat -c %Y "$file") ) / 86400 > 3 )); then
-                        ((logCount++))
-                        rm "$file"
+                elif [[ "$file" == *.log ]]; then
+                        mod_time=$(stat -c %Y "$file" 2>/dev/null)
+                        if [[ -n "$mod_time" ]]; then
+                                day_ago=$(( ( $(date +%s) - mod_time ) / 86400 ))
+                                if (( day_ago > 3 )); then
+                                        ((logCount++))
+                                        rm "$file"
+                                fi
+                        fi
                 elif [[ "$file" == *.tmp || "$file" == *.temp || "$file" == *.bak || "$file" == *~ || "$file" == */~* || "$file" == *.$$$ || "$file" == *.old ]]; then
                         ((tmpCount++))
                         rm "$file"
@@ -73,7 +79,6 @@ elif [[ $1 == clean ]]; then
         else
             echo "Clean up of" $path "is complete!"
         fi
-
 elif [[ $1 == report ]]; then
         count=0
         #path="/home/adm-account/Desktop";
